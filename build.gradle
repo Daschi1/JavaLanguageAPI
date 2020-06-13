@@ -7,23 +7,26 @@ apply plugin: 'java'
 group 'de.daschi'
 version 'v1.0.0a'
 
-sourceCompatibility = 1.8
-
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
 
 repositories {
     mavenCentral()
+
+    maven {
+        url = 'https://jitpack.io'
+    }
 }
 
 dependencies {
-
+    compile(group: 'mysql', name: 'mysql-connector-java', version: '8.0.20')
+    compile(group: 'com.github.Carleslc', name: 'Simple-YAML', version: '1.4.1')
 }
 
 jar {
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
-    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+    exclude('META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA')
 }
