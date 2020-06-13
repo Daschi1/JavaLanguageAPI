@@ -140,10 +140,10 @@ fabric.properties
 
 # Reason: https://github.com/joeblau/gitignore.io/issues/186#issuecomment-249601023
 
-*.iml
+#*.iml -> disabeld, reason: duplicate
 modules.xml
 .idea/misc.xml
-*.ipr
+#*.ipr -> disabeld, reason: duplicate
 
 # Sonarlint plugin
 .idea/sonarlint
