@@ -1,2 +1,2 @@
 # JavaLanguageAPI
-## A Language API for java.
+## A language API for java.
