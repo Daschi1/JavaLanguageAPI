@@ -1,5 +1,5 @@
 # JavaLanguageAPI
-## A language API for java.
+## A language API for java with YAML or MySQL.
 
 ```java
 LanguageAPI.setLanguageHandler(new LanguageHandler(LanguageHandler.LanguageSaveMode.YAML, "languageAPI", "en_us")); //setup language API with yaml (local)
