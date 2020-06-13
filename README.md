@@ -1,2 +1,2 @@
 # JavaLanguageAPI
-## A Language API for java with YAML or MySQL.
+## A language API for java.
