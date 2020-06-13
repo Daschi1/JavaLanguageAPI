@@ -16,6 +16,10 @@ public class LanguageAPI {
         LanguageAPI.languageHandler = languageHandler;
     }
 
+    public static void setLanguage(final String language) {
+        LanguageAPI.languageHandler.setLanguage(language);
+    }
+
     public static String getValue(final String key) {
         return LanguageAPI.languageHandler.getValue(key);
     }

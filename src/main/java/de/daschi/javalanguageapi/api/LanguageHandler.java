@@ -17,14 +17,14 @@ public class LanguageHandler {
     private MySQL mySQL;
     private String language;
 
-    public LanguageHandler(final LanguageSaveMode languageSaveMode, final String folderPath, final String defaultLanguage) {
-        this(languageSaveMode, folderPath, "", -1, "", "", "", defaultLanguage);
+    public LanguageHandler(final LanguageSaveMode languageSaveMode, final String folderPath, final String language) {
+        this(languageSaveMode, folderPath, language, "", -1, "", "", "");
     }
 
-    public LanguageHandler(final LanguageSaveMode languageSaveMode, final String folderPath, final String hostname, final int port, final String username, final String password, final String database, final String defaultLanguage) {
+    public LanguageHandler(final LanguageSaveMode languageSaveMode, final String folderPath, final String language, final String hostname, final int port, final String username, final String password, final String database) {
         this.languageSaveMode = languageSaveMode;
         this.folderPath = folderPath.endsWith("/") ? folderPath : folderPath + "/";
-        this.language = defaultLanguage;
+        this.language = language;
 
         if (this.languageSaveMode.equals(LanguageSaveMode.MySQL)) {
             try {
