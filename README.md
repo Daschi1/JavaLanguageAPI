@@ -16,28 +16,28 @@ LanguageAPI.hasValue("key"); //check if value exists for current language (you c
 
 Gradle:
 
-```gradle
+```
 repositories {
       ...
       maven { url 'https://jitpack.io' }
-		}
+}
 
 dependencies {
     ...
     compile 'com.github.Daschi1:JavaLanguageAPI:v1.0.0a'
-	}
+}
   
 ```
 
 Maven:
     
 ```maven
-  <repositories>
-		<repository>
-		    <id>jitpack.io</id>
-		    <url>https://jitpack.io</url>
-		</repository>
-  </repositories>
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
   
 <dependency>
     <groupId>com.github.Daschi1</groupId>
