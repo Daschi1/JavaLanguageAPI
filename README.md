@@ -12,6 +12,7 @@ LanguageAPI.setLanguage("en_uk"); //change language
 LanguageAPI.setValue("key", "value"); //set value for current language (you can also provide a specific language as the final argument)
 LanguageAPI.getValue("key"); //get value for current language (you can also provide a specific language as the final argument)
 LanguageAPI.hasValue("key"); //check if value exists for current language (you can also provide a specific language as the final argument)
+LanguageAPI.removeValue("key"); //remove value for current language (you can also provide a specific language as the final argument)
 ```
 
 Gradle:
