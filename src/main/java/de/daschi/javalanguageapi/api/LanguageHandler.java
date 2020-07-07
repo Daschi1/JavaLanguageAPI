@@ -7,7 +7,6 @@ import org.simpleyaml.exceptions.InvalidConfigurationException;
 import javax.sql.rowset.CachedRowSet;
 import java.io.File;
 import java.io.IOException;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
 
