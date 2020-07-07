@@ -1,8 +1,10 @@
 package de.daschi.javalanguageapi.api;
 
-import de.daschi.javalanguageapi.mysql.MySQL;
-import org.simpleyaml.configuration.file.YamlConfiguration;
+import de.daschi.core.MySQL;
+import org.simpleyaml.configuration.file.YamlFile;
+import org.simpleyaml.exceptions.InvalidConfigurationException;
 
+import javax.sql.rowset.CachedRowSet;
 import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
@@ -14,7 +16,6 @@ public class LanguageHandler {
     private final LanguageSaveMode languageSaveMode;
     private final String folderPath;
     private LanguageHandler cache;
-    private MySQL mySQL;
     private String language;
 
     public LanguageHandler(final LanguageSaveMode languageSaveMode, final String folderPath, final String language) {
@@ -37,16 +38,10 @@ public class LanguageHandler {
 
     private void setupMySQL(final String hostname, final int port, final String username, final String password, final String database) throws SQLException, ClassNotFoundException {
         this.cache = new LanguageHandler(LanguageSaveMode.YAML, this.folderPath + "cache/", this.language);
-        this.mySQL = new MySQL(hostname, String.valueOf(port), database, username, password);
-        this.mySQL.openConnection();
+        MySQL.using(new MySQL(hostname, port, username, password, database));
+        MySQL.autoDisconnect(true);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                this.mySQL.closeConnection();
-            } catch (final SQLException exception) {
-                throw new LanguageException("Could not close the mysql connection.", exception);
-            }
-
             final File cacheFolder = new File(this.cache.getFolderPath());
             for (final String s : Objects.requireNonNull(cacheFolder.list())) {
                 final File currentFile = new File(cacheFolder.getPath(), s);
@@ -63,23 +58,25 @@ public class LanguageHandler {
 
     public String getValue(final String key, final String language) {
         if (this.languageSaveMode.equals(LanguageSaveMode.YAML)) {
-            final YamlConfiguration yamlConfiguration = YamlConfiguration.loadConfiguration(new File(this.folderPath + language + ".yml"));
-            if (yamlConfiguration.contains(key)) {
-                return yamlConfiguration.getString(key);
+            final YamlFile yamlFile = new YamlFile(new File(this.folderPath + language + ".yml"));
+            try {
+                yamlFile.loadWithComments();
+            } catch (final InvalidConfigurationException | IOException e) {
+                e.printStackTrace();
+            }
+            if (this.hasValue(key, language)) {
+                return yamlFile.getString(key);
             }
         } else {
             if (this.cache.hasValue(key)) {
                 return this.cache.getValue(key);
             } else {
                 try {
-                    final ResultSet resultSet = this.mySQL.executeQuery("SELECT * FROM `" + language + "` WHERE `key` = '" + key + "';");
-                    if (resultSet.next()) {
-                        final String value = resultSet.getString("value");
+                    final CachedRowSet cachedRowSet = MySQL.query("SELECT * FROM `" + MySQL.preventSQLInjection(language) + "` WHERE `key` = '" + MySQL.preventSQLInjection(key) + "';");
+                    if (cachedRowSet.next()) {
+                        final String value = cachedRowSet.getString("value");
                         this.cache.setValue(key, value);
-                        resultSet.close();
                         return value;
-                    } else {
-                        resultSet.close();
                     }
                 } catch (final SQLException exception) {
                     throw new LanguageException("Could not execute a query to the mysql.", exception);
@@ -93,30 +90,28 @@ public class LanguageHandler {
         this.setValue(key, value, this.language);
     }
 
-    public void setValue(String key, String value, final String language) {
+    public void setValue(final String key, final String value, final String language) {
         if (this.languageSaveMode.equals(LanguageSaveMode.YAML)) {
-            final File yamlFile = new File(this.folderPath + language + ".yml");
+            final File file = new File(this.folderPath + language + ".yml");
             try {
-                final YamlConfiguration yamlConfiguration = YamlConfiguration.loadConfiguration(yamlFile);
-                yamlConfiguration.set(key, value);
-                yamlConfiguration.save(yamlFile);
-            } catch (final IOException exception) {
-                throw new LanguageException("Could not save the yaml config '" + yamlFile.getAbsolutePath() + "'.", exception);
+                final YamlFile yamlFile = new YamlFile(file);
+                if (!yamlFile.exists()) {
+                    yamlFile.createNewFile(true);
+                }
+                yamlFile.loadWithComments();
+                yamlFile.set(key, value);
+                yamlFile.saveWithComments();
+            } catch (final IOException | InvalidConfigurationException exception) {
+                throw new LanguageException("Could not save the yaml config '" + file.getAbsolutePath() + "'.", exception);
             }
         } else {
-            value = value.replaceAll("[']", "\\\\'");
-            key = key.replaceAll("[']", "\\\\'");
-            try {
-                this.mySQL.executeUpdate("CREATE TABLE IF NOT EXISTS `" + language + "` " +
-                        "(" +
-                        "`key` text," +
-                        "`value` text," +
-                        "UNIQUE(`key`)" +
-                        ");");
-                this.mySQL.executeUpdate("INSERT INTO `" + language + "` (`key`, `value`) VALUES ('" + key + "', '" + value + "') ON DUPLICATE KEY UPDATE `value` = '" + value + "';");
-            } catch (final SQLException exception) {
-                throw new LanguageException("Could not execute an update to the mysql.", exception);
-            }
+            MySQL.update("CREATE TABLE IF NOT EXISTS `" + MySQL.preventSQLInjection(language) + "` " +
+                    "(" +
+                    "`key` text," +
+                    "`value` text," +
+                    "UNIQUE(`key`)" +
+                    ");");
+            MySQL.update("INSERT INTO `" + MySQL.preventSQLInjection(language) + "` (`key`, `value`) VALUES ('" + MySQL.preventSQLInjection(key) + "', '" + MySQL.preventSQLInjection(value) + "') ON DUPLICATE KEY UPDATE `value` = '" + MySQL.preventSQLInjection(value) + "';");
         }
     }
 
@@ -126,16 +121,43 @@ public class LanguageHandler {
 
     public boolean hasValue(final String key, final String language) {
         if (this.languageSaveMode.equals(LanguageSaveMode.YAML)) {
-            final YamlConfiguration yamlConfiguration = YamlConfiguration.loadConfiguration(new File(this.folderPath + language + ".yml"));
-            return yamlConfiguration.contains(key);
+            final YamlFile yamlFile = new YamlFile(new File(this.folderPath + language + ".yml"));
+            try {
+                yamlFile.loadWithComments();
+            } catch (final InvalidConfigurationException | IOException e) {
+                e.printStackTrace();
+            }
+            return yamlFile.contains(key);
         } else {
             try {
-                final ResultSet resultSet = this.mySQL.executeQuery("SELECT * FROM `" + language + "` WHERE `key` = '" + key + "';");
-                final boolean exists = resultSet.next();
-                resultSet.close();
-                return exists;
+                final CachedRowSet cachedRowSet = MySQL.query("SELECT * FROM `" + MySQL.preventSQLInjection(language) + "` WHERE `key` = '" + MySQL.preventSQLInjection(key) + "';");
+                return cachedRowSet.next();
             } catch (final SQLException exception) {
                 throw new LanguageException("Could not execute a query to the mysql.", exception);
+            }
+        }
+    }
+
+    public void removeValue(final String key) {
+        this.setValue(key, this.language);
+    }
+
+    public void removeValue(final String key, final String language) {
+        if (this.languageSaveMode.equals(LanguageSaveMode.YAML)) {
+            final File file = new File(this.folderPath + language + ".yml");
+            try {
+                final YamlFile yamlFile = new YamlFile(file);
+                yamlFile.loadWithComments();
+                if (this.hasValue(key, language)) {
+                    yamlFile.remove(key);
+                }
+                yamlFile.saveWithComments();
+            } catch (final IOException | InvalidConfigurationException exception) {
+                throw new LanguageException("Could not save the yaml config '" + file.getAbsolutePath() + "'.", exception);
+            }
+        } else {
+            if (this.hasValue(key, language)) {
+                MySQL.update("DELETE FROM `" + MySQL.preventSQLInjection(language) + "` WHERE `key` = '" + MySQL.preventSQLInjection(key) + "';");
             }
         }
     }
@@ -146,10 +168,6 @@ public class LanguageHandler {
 
     public String getFolderPath() {
         return this.folderPath;
-    }
-
-    public MySQL getMySQL() {
-        return this.mySQL;
     }
 
     public String getLanguage() {
