@@ -59,6 +59,9 @@ public class LanguageHandler {
         if (this.languageSaveMode.equals(LanguageSaveMode.YAML)) {
             final YamlFile yamlFile = new YamlFile(new File(this.folderPath + language + ".yml"));
             try {
+                if (!yamlFile.exists()) {
+                    yamlFile.createNewFile(false);
+                }
                 yamlFile.loadWithComments();
             } catch (final InvalidConfigurationException | IOException e) {
                 e.printStackTrace();
@@ -95,7 +98,7 @@ public class LanguageHandler {
             try {
                 final YamlFile yamlFile = new YamlFile(file);
                 if (!yamlFile.exists()) {
-                    yamlFile.createNewFile(true);
+                    yamlFile.createNewFile(false);
                 }
                 yamlFile.loadWithComments();
                 yamlFile.set(key, value);
@@ -122,6 +125,9 @@ public class LanguageHandler {
         if (this.languageSaveMode.equals(LanguageSaveMode.YAML)) {
             final YamlFile yamlFile = new YamlFile(new File(this.folderPath + language + ".yml"));
             try {
+                if (!yamlFile.exists()) {
+                    yamlFile.createNewFile(false);
+                }
                 yamlFile.loadWithComments();
             } catch (final InvalidConfigurationException | IOException e) {
                 e.printStackTrace();
@@ -146,6 +152,9 @@ public class LanguageHandler {
             final File file = new File(this.folderPath + language + ".yml");
             try {
                 final YamlFile yamlFile = new YamlFile(file);
+                if (!yamlFile.exists()) {
+                    yamlFile.createNewFile(false);
+                }
                 yamlFile.loadWithComments();
                 if (this.hasValue(key, language)) {
                     yamlFile.remove(key);
