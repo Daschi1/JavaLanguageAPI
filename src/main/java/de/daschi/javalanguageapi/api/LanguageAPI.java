@@ -20,6 +20,10 @@ public class LanguageAPI {
         LanguageAPI.languageHandler.setLanguage(language);
     }
 
+    public static String getLanguage() {
+        return LanguageAPI.languageHandler.getLanguage();
+    }
+
     public static String getValue(final String key) {
         return LanguageAPI.languageHandler.getValue(key);
     }
